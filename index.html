@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111111">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Toca-discos">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="192x192" href="logo-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="logo-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="logo-512.png">
+<title>Toca-discos YouTube</title>
+
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;min-height:100%}
+body{
+    min-height:100vh;padding:20px;
+    font-family:Arial,Helvetica,sans-serif;color:#fff;
+    background:
+        radial-gradient(circle at 20% 15%,rgba(255,220,150,.10),transparent 24%),
+        radial-gradient(circle at 80% 75%,rgba(55,20,5,.30),transparent 30%),
+        repeating-linear-gradient(7deg,#5a321b 0px,#6b3d20 7px,#4b2816 15px,#704325 23px,#512c18 31px,#63371c 40px);
+    background-attachment:fixed;
+    overflow-x:hidden;
+}
+.page{width:100%;max-width:1000px;margin:0 auto}
+.turntable{
+    width:100%;padding:34px;border-radius:24px;
+    background:linear-gradient(145deg,rgba(92,52,27,.96),rgba(36,18,9,.98));
+    border:1px solid #8a5a32;
+    box-shadow:0 30px 70px rgba(20,8,2,.70),inset 0 1px 1px rgba(255,220,160,.12),inset 0 0 35px rgba(0,0,0,.25);
+}
+.top{width:100%;display:flex;align-items:center;gap:45px}
+.platter{
+    position:relative;width:440px;height:440px;flex:0 0 440px;border-radius:50%;
+    background:#202020;
+    box-shadow:inset 0 0 0 10px #292929,inset 0 0 30px #000,0 10px 25px rgba(0,0,0,.65)
+}
+.vinyl{
+    position:absolute;left:4.5%;top:4.5%;width:91%;height:91%;border-radius:50%;
+    background:repeating-radial-gradient(circle,#070707 0,#111 2px,#050505 4px,#151515 6px);
+    box-shadow:0 0 22px #000,inset 0 0 30px #000
+}
+.vinyl::before{
+    content:"";position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from 15deg,transparent,rgba(255,255,255,.1),transparent 18%,transparent 55%,rgba(255,255,255,.06),transparent)
+}
+.vinyl.playing{animation:vinylSpin 1.36s linear infinite}
+@keyframes vinylSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.label{
+    position:absolute;width:30%;height:30%;left:35%;top:35%;border-radius:50%;
+    background:
+        radial-gradient(circle at center,#111 0 5%,transparent 5.5%),
+        radial-gradient(circle at center,rgba(0,0,0,.20),rgba(0,0,0,.02) 58%,rgba(0,0,0,.38) 100%),
+        #7b2028;
+    background-size:100% 100%;
+    background-position:center;
+    background-repeat:no-repeat;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.14),inset 0 0 15px rgba(0,0,0,.72),0 1px 4px rgba(0,0,0,.65);
+    overflow:hidden
+}
+.label::before{
+    content:"";position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.18),transparent 22%),radial-gradient(circle,transparent 0 48%,rgba(0,0,0,.16) 49%,transparent 51%),radial-gradient(circle,transparent 0 66%,rgba(0,0,0,.18) 67%,transparent 69%);
+    pointer-events:none
+}
+.label::after{
+    content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px;border-radius:50%;
+    background:#090909;box-shadow:0 0 0 2px rgba(255,255,255,.10)
+}
+.hole{display:none}
+.tonearm{
+    position:absolute;right:2%;top:8%;width:25.5%;height:4%;min-height:10px;border-radius:20px;
+    background:linear-gradient(to bottom,#eee,#aaa 45%,#555 75%,#2b2b2b);
+    transform-origin:100% 50%;transform:rotate(0);
+    transition:transform 1.15s cubic-bezier(.22,.75,.25,1);
+    z-index:30;box-shadow:0 3px 8px rgba(0,0,0,.75)
+}
+.tonearm.playing-arm{transform:rotate(-45deg)}
+.tonearm::after{
+    content:"";position:absolute;left:-10px;top:50%;width:25px;height:18px;margin-top:-9px;border-radius:4px;
+    background:linear-gradient(#252525,#050505);box-shadow:2px 3px 6px rgba(0,0,0,.8)
+}
+.tonearm::before{
+    content:"";position:absolute;left:-7px;top:50%;width:3px;height:12px;margin-top:4px;background:#ddd;
+    transform:rotate(20deg);transform-origin:top center
+}
+.pivot{
+    position:absolute;right:-3%;top:5%;width:10%;height:10%;min-width:30px;min-height:30px;border-radius:50%;
+    background:radial-gradient(circle,#ddd 0%,#888 35%,#3a3a3a 65%,#111 100%);
+    z-index:40;box-shadow:0 3px 10px rgba(0,0,0,.8)
+}
+.panel{flex:1 1 0;min-width:0;width:100%}
+.display{
+    width:100%;min-width:0;padding:18px;border-radius:10px;background:#090909;border:1px solid #333;
+    box-shadow:inset 0 0 15px #000
+}
+.song{width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;color:#eee}
+.playlist-name{margin-top:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#888;font-size:12px}
+.status{margin-top:8px;color:#c99b3c;font-size:13px;font-weight:bold;letter-spacing:2px;text-transform:uppercase}
+.controls{
+    width:100%;max-width:390px;margin:18px auto 0;display:grid;
+    grid-template-columns:1fr 1.7fr 1fr 1fr;gap:9px
+}
+button{
+    min-width:0;width:100%;height:48px;padding:0 8px;border:1px solid #555;border-radius:8px;color:#fff;
+    background:linear-gradient(#444,#222);font-family:Arial,Helvetica,sans-serif;font-size:19px;cursor:pointer;
+    box-shadow:0 4px 8px rgba(0,0,0,.55);transition:background .15s ease,transform .15s ease
+}
+button:hover{background:linear-gradient(#555,#292929)}
+button:active{transform:translateY(2px)}
+.play-button{font-size:15px;font-weight:bold;background:linear-gradient(#b78a35,#76571e);border-color:#d4a84f}
+.play-button:hover{background:linear-gradient(#c79b43,#856525)}
+.volume-area{width:100%;min-width:0;margin-top:24px}
+.volume-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;color:#bbb;font-size:13px}
+.volume-slider{width:100%;min-width:0}
+input[type=range]{display:block;width:100%;max-width:100%;min-width:0;height:8px;margin:0;padding:0;cursor:pointer;background:transparent;accent-color:#b78a35}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:10px;background:#444}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin-top:-6px;border:0;border-radius:50%;background:#c08e2e}
+input[type=range]::-moz-range-track{height:6px;border-radius:10px;background:#444}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:#c08e2e}
+.time{width:100%;display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:#777;font-size:11px}
+.library{
+    width:100%;margin-top:28px;padding:24px;border-radius:20px;
+    background:linear-gradient(145deg,#242424,#101010);border:1px solid #3c3c3c;
+    box-shadow:0 20px 50px rgba(0,0,0,.55)
+}
+.library-title{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}
+.library-title strong{font-size:20px;color:#eee}
+.library-title span{color:#888;font-size:12px}
+.playlists{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.playlist-card{
+    position:relative;overflow:hidden;padding:0;height:auto;border:1px solid #444;border-radius:12px;
+    background:#111;text-align:left;box-shadow:0 8px 20px rgba(0,0,0,.45);
+    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease
+}
+.playlist-card:hover{transform:translateY(-4px);border-color:#b78a35;box-shadow:0 12px 28px rgba(0,0,0,.65)}
+.playlist-card.active{border-color:#d4a84f;box-shadow:0 0 0 2px rgba(212,168,79,.25),0 12px 30px rgba(0,0,0,.7)}
+.cover{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:radial-gradient(circle,#7c2025,#2a0d10 60%,#090909)}
+.cover img{width:100%;height:100%;display:block;object-fit:cover}
+.cover-placeholder{
+    width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:15px;text-align:center;background:radial-gradient(circle at center,#9c2a30 0%,#451318 45%,#090909 100%)
+}
+.cover-placeholder .mini-vinyl{
+    width:58%;aspect-ratio:1;border-radius:50%;
+    background:repeating-radial-gradient(circle,#050505 0,#151515 3px,#050505 6px);
+    border:8px solid #222;box-shadow:0 5px 20px #000
+}
+.cover-placeholder strong{margin-top:10px;color:#e9c56b;font-size:14px}
+.playlist-info{padding:11px}
+.playlist-info strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#eee;font-size:14px}
+.playlist-info span{display:block;margin-top:5px;color:#888;font-size:11px}
+.youtube-player{
+    position:fixed;width:200px;height:200px;left:-1000px;top:-1000px;opacity:0;pointer-events:none
+}
+.api-message{
+    margin-top:12px;padding:10px 12px;border-radius:8px;background:#201a0d;border:1px solid #594719;
+    color:#d9c58e;font-size:12px;line-height:1.45
+}
+@media(max-width:900px){
+    body{align-items:flex-start;padding-top:25px;padding-bottom:25px}
+    .turntable{padding:26px}.top{gap:30px}.platter{width:380px;height:380px;flex-basis:380px}
+    .playlists{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:760px){
+    body{display:block;padding:14px}.turntable{width:100%;padding:20px;border-radius:20px}
+    .top{flex-direction:column;align-items:center;gap:25px}.platter{width:min(78vw,420px);height:min(78vw,420px);flex:0 0 auto}
+    .panel{width:100%;max-width:500px}.display{padding:16px}.controls{max-width:390px}
+    .library{padding:18px;border-radius:17px}.playlists{display:flex;overflow-x:auto;gap:14px;padding-bottom:8px;scroll-snap-type:x mandatory}
+    .playlist-card{flex:0 0 min(52vw,220px);scroll-snap-align:start}
+}
+@media(max-width:430px){
+    body{padding:8px}.turntable{padding:15px;border-radius:17px}.platter{width:82vw;height:82vw}
+    .display{padding:14px}.song{font-size:16px}.controls{width:100%;gap:6px}
+    button{height:46px;padding:0 5px;font-size:17px}.play-button{font-size:13px}.volume-area{margin-top:22px}
+    .library{margin-top:18px;padding:14px}.library-title strong{font-size:17px}.playlist-card{flex-basis:58vw}
+}
+@media(max-width:340px){
+    .turntable{padding:12px}.platter{width:84vw;height:84vw}.controls{gap:4px}
+    button{height:43px;font-size:15px}.play-button{font-size:12px}
+}
+
+/* =========================================================
+   PWA — POPUP DE INSTALAÇÃO
+========================================================= */
+.pwa-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:99999;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    background:rgba(0,0,0,.88);
+    backdrop-filter:blur(4px);
+}
+.pwa-card{
+    width:min(100%,380px);
+    max-height:90vh;
+    overflow:auto;
+    padding:22px;
+    border-radius:18px;
+    background:linear-gradient(145deg,#171717,#050505);
+    border:1px solid #5b451b;
+    box-shadow:0 20px 60px rgba(0,0,0,.75);
+    text-align:center;
+}
+.pwa-card h2{
+    margin:0 0 10px;
+    color:#e9c56b;
+    font-size:21px;
+}
+.pwa-card p{
+    margin:8px 0;
+    color:#ddd;
+    font-size:14px;
+    line-height:1.5;
+}
+.pwa-steps{
+    margin-top:12px;
+    padding:13px;
+    border-radius:10px;
+    background:#0e0e0e;
+    border:1px solid #333;
+    color:#ddd;
+    font-size:13px;
+    line-height:1.7;
+    text-align:left;
+}
+.pwa-btn{
+    width:100%;
+    margin-top:12px;
+    min-height:46px;
+    border:0;
+    border-radius:10px;
+    background:linear-gradient(#c99b3c,#76571e);
+    color:#fff;
+    font-weight:bold;
+    cursor:pointer;
+}
+.pwa-close{
+    width:100%;
+    margin-top:8px;
+    min-height:42px;
+    border:1px solid #444;
+    border-radius:10px;
+    background:#222;
+    color:#fff;
+    cursor:pointer;
+}
+.pwa-install-link{
+    position:fixed;
+    right:14px;
+    bottom:14px;
+    z-index:9990;
+    display:none;
+    border:1px solid #d4a84f;
+    border-radius:999px;
+    padding:10px 14px;
+    background:#171717;
+    color:#fff;
+    font-weight:bold;
+    box-shadow:0 8px 22px rgba(0,0,0,.55);
+    cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+<div class="page">
+    <div class="turntable">
+        <div class="top">
+            <div class="platter">
+                <div class="vinyl" id="vinyl">
+                    <div class="label"><div class="hole"></div></div>
+                </div>
+                <div class="tonearm" id="tonearm"></div>
+                <div class="pivot"></div>
+            </div>
+
+            <div class="panel">
+                <div class="display">
+                    <div class="song" id="song">🎵 Carregando playlist...</div>
+                    <div class="playlist-name" id="playlistName">YouTube</div>
+                    <div class="status" id="status">Carregando</div>
+                </div>
+
+                <div class="controls">
+                    <button type="button" id="previousButton" title="Música anterior">⏮</button>
+                    <button type="button" class="play-button" id="playButton" title="Reproduzir">▶ Reproduzir</button>
+                    <button type="button" id="stopButton" title="Parar">■</button>
+                    <button type="button" id="nextButton" title="Próxima música">⏭</button>
+                </div>
+
+                <div class="volume-area">
+                    <div class="volume-label"><span>🔊 Volume</span></div>
+                    <div class="volume-slider">
+                        <input type="range" id="volume" min="0" max="100" step="1" value="70" aria-label="Volume">
+                    </div>
+                    <div class="time">
+                        <span id="currentTime">0:00</span>
+                        <span id="duration">0:00</span>
+                    </div>
+                </div>
+
+                <div id="apiMessage" class="api-message" hidden></div>
+            </div>
+        </div>
+    </div>
+
+    <section class="library">
+        <div class="library-title">
+            <strong>Discoteca</strong>
+            <span>Clique na capa para ouvir</span>
+        </div>
+        <div class="playlists" id="playlists"></div>
+    </section>
+</div>
+
+
+<!-- =========================================================
+     PWA — INSTALAÇÃO
+========================================================= -->
+<button id="pwaInstallLink" class="pwa-install-link" type="button">📲 Instalar app</button>
+
+<div id="pwaPopup" class="pwa-overlay" role="dialog" aria-modal="true" aria-labelledby="pwaTitulo">
+    <div class="pwa-card">
+        <h2 id="pwaTitulo">INSTALAR APLICATIVO</h2>
+        <p id="pwaTexto"></p>
+        <div id="pwaSteps" class="pwa-steps"></div>
+        <button id="pwaBtn" class="pwa-btn" type="button">CONTINUAR</button>
+        <button id="pwaClose" class="pwa-close" type="button">AGORA NÃO</button>
+    </div>
+</div>
+
+<div id="youtube-player" class="youtube-player"></div>
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+/* =========================================================
+   CONFIGURAÇÃO
+========================================================= */
+
+/*
+  1) Crie uma chave da YouTube Data API v3.
+  2) Cole a chave abaixo.
+  3) NÃO precisa subir as capas para o GitHub.
+
+  A chave fica visível no navegador, então no Google Cloud
+  restrinja a chave ao seu domínio/GitHub Pages e somente à
+  YouTube Data API v3.
+*/
+const YOUTUBE_API_KEY = "AIzaSyDtaU0s5cdRbX-kUC06el2nPCTXBP-eUeA";
+
+const playlists = [
+    {
+        nome: "Playlist 1",
+        tipo: "playlist",
+        playlist: "PLofmCZWRdOtl1dM2XQPx2_8KxveP6KbTt",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 2",
+        tipo: "playlist",
+        playlist: "PLBnJv6rImVe99sHtaHb8PqzPNTE1e3c_g",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 3",
+        tipo: "playlist",
+        playlist: "PL74GYeNZA34kraAOzOt14zTN1Gq1z4Ng1",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 4",
+        tipo: "playlist",
+        playlist: "PL1rhifBYZA8HPi4xqYhwYYZRYYQcKGgXs",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 5",
+        tipo: "playlist",
+        playlist: "PLA7F5D92318ADAB54",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 6",
+        tipo: "playlist",
+        playlist: "PL-jLSD1zyBYs4kpYlz0wzH42pwFXsSJ9C",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 7",
+        tipo: "playlist",
+        playlist: "PLkEi5pNMkdaIETSwcD5ejXal_yXd8kipb",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 8",
+        tipo: "playlist",
+        playlist: "PLycVTiaj8OI8F5vZlwv4NnvGwc84ITnW2",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 9",
+        tipo: "playlist",
+        playlist: "PLupnXOesQMe8Eig0l7KOoxwvrC1xzOx78",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 10",
+        tipo: "playlist",
+        playlist: "PLrt7VbxNS8rdZNa3cTr_Sm3RBVO3Z4pB7",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 11",
+        tipo: "playlist",
+        playlist: "PLMxy067kbpQgA-wdHMgYm9_7NmoKyatBM",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 12",
+        tipo: "playlist",
+        playlist: "PLrt7VbxNS8reaPOAyTjHMzq5gzsSEfTik",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 13",
+        tipo: "playlist",
+        playlist: "PLqpnl7ZXISsybQJgqNI4KKXx7zkFSolQh",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 14",
+        tipo: "playlist",
+        playlist: "PLZgRtK-Rr3FioMRpSzazeLx8qrWdI7mYz",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 15",
+        tipo: "playlist",
+        playlist: "PLg7iGwiJw8BEJ92IZPD0umy2vM6_dqEBw",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 16",
+        tipo: "playlist",
+        playlist: "PLZgRtK-Rr3Fj7JJ8LETC30q8SHGIRUCQv",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 17",
+        tipo: "playlist",
+        playlist: "PLxFfose56AjeQioRVpfRNEMIjXm7P_mYn",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 18",
+        tipo: "playlist",
+        playlist: "PLs0odKA07LBaSxnhIeaEdAKwl9hNGX7je",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Playlist 19",
+        tipo: "playlist",
+        playlist: "PLavbwquoxeu41xc27HiItiN66a2s1mKT9",
+        video: "",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Playlist do YouTube",
+        quantidade: 0
+    },
+    {
+        nome: "Mix 20",
+        tipo: "video",
+        playlist: "",
+        video: "VOgFZfRVaww",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Mix do YouTube",
+        quantidade: 1
+    },
+    {
+        nome: "Mix 21",
+        tipo: "video",
+        playlist: "",
+        video: "w46bWxS9IjY",
+        capa: "",
+        capaOriginal: "",
+        descricao: "Mix do YouTube",
+        quantidade: 1
+    }
+];
+
+/* =========================================================
+   Os 2 links "RD..." enviados foram tratados como vídeos individuais,
+   porque não são playlists públicas normais da YouTube Data API.
+========================================================= */
+
+/* =========================================================
+   ELEMENTOS
+========================================================= */
+const vinyl = document.getElementById("vinyl");
+const tonearm = document.getElementById("tonearm");
+const statusText = document.getElementById("status");
+const playButton = document.getElementById("playButton");
+const previousButton = document.getElementById("previousButton");
+const nextButton = document.getElementById("nextButton");
+const stopButton = document.getElementById("stopButton");
+const volume = document.getElementById("volume");
+const currentTime = document.getElementById("currentTime");
+const duration = document.getElementById("duration");
+const song = document.getElementById("song");
+const playlistName = document.getElementById("playlistName");
+const recordLabel = document.querySelector(".label");
+const playlistsContainer = document.getElementById("playlists");
+const apiMessage = document.getElementById("apiMessage");
+
+let player = null;
+let playerReady = false;
+let tocando = false;
+let playlistAtual = 0;
+
+/* =========================================================
+   SEGURANÇA
+========================================================= */
+function escapeHtml(text) {
+    return String(text ?? "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+/* =========================================================
+   CAPA AUTOMÁTICA
+   Busca a capa oficial da playlist.
+   Se não existir, usa a miniatura do primeiro vídeo.
+========================================================= */
+async function carregarDadosPlaylist(item) {
+    if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY.includes("COLE_SUA")) {
+        return false;
+    }
+
+    try {
+        if (item.tipo === "video") {
+            const url =
+                "https://www.googleapis.com/youtube/v3/videos" +
+                "?part=snippet,contentDetails" +
+                "&id=" + encodeURIComponent(item.video) +
+                "&key=" + encodeURIComponent(YOUTUBE_API_KEY);
+
+            const resposta = await fetch(url);
+            const dados = await resposta.json();
+
+            if (!resposta.ok || dados.error) {
+                throw new Error(dados.error?.message || "Erro ao consultar a API.");
+            }
+
+            const v = dados.items?.[0];
+            if (!v) throw new Error("Vídeo não encontrado ou não está público.");
+
+            item.nome = v.snippet?.title || item.nome;
+            item.descricao = "Mix do YouTube";
+            item.quantidade = 1;
+
+            const thumbs = v.snippet?.thumbnails || {};
+            if (thumbs.maxres?.url) item.capa = thumbs.maxres.url;
+            else if (thumbs.high?.url) item.capa = thumbs.high.url;
+            else if (thumbs.medium?.url) item.capa = thumbs.medium.url;
+            else if (thumbs.default?.url) item.capa = thumbs.default.url;
+
+            item.capaOriginal = item.capa;
+            return true;
+        }
+
+        const url =
+            "https://www.googleapis.com/youtube/v3/playlists" +
+            "?part=snippet,contentDetails" +
+            "&id=" + encodeURIComponent(item.playlist) +
+            "&key=" + encodeURIComponent(YOUTUBE_API_KEY);
+
+        const resposta = await fetch(url);
+        const dados = await resposta.json();
+
+        if (!resposta.ok || dados.error) {
+            throw new Error(dados.error?.message || "Erro ao consultar a API.");
+        }
+
+        if (!dados.items || !dados.items.length) {
+            throw new Error("Playlist não encontrada ou não está pública.");
+        }
+
+        const p = dados.items[0];
+
+        item.nome = p.snippet?.title || item.nome;
+        item.descricao = p.snippet?.description || item.descricao;
+        item.quantidade = p.contentDetails?.itemCount || 0;
+
+        const thumbs = p.snippet?.thumbnails || {};
+
+        if (thumbs.maxres?.url) item.capa = thumbs.maxres.url;
+        else if (thumbs.high?.url) item.capa = thumbs.high.url;
+        else if (thumbs.medium?.url) item.capa = thumbs.medium.url;
+        else if (thumbs.default?.url) item.capa = thumbs.default.url;
+
+        item.capaOriginal = item.capa;
+
+        if (!item.capa) {
+            const itensUrl =
+                "https://www.googleapis.com/youtube/v3/playlistItems" +
+                "?part=snippet" +
+                "&playlistId=" + encodeURIComponent(item.playlist) +
+                "&maxResults=1" +
+                "&key=" + encodeURIComponent(YOUTUBE_API_KEY);
+
+            const r2 = await fetch(itensUrl);
+            const d2 = await r2.json();
+
+            const primeiro = d2.items?.[0];
+            const t = primeiro?.snippet?.thumbnails || {};
+
+            if (t.maxres?.url) item.capa = t.maxres.url;
+            else if (t.high?.url) item.capa = t.high.url;
+            else if (t.medium?.url) item.capa = t.medium.url;
+            else if (t.default?.url) item.capa = t.default.url;
+
+            item.capaOriginal = item.capa;
+        }
+
+        return true;
+    } catch (erro) {
+        console.error("Erro ao carregar item do YouTube:", erro);
+        return false;
+    }
+}
+
+/* =========================================================
+   RENDERIZAR PLAYLISTS
+========================================================= */
+function renderPlaylists() {
+    // Cada card usa exclusivamente a capa da própria playlist.
+    // A imagem não é substituída quando a música muda.
+    playlistsContainer.innerHTML = "";
+
+    playlists.forEach((item, index) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "playlist-card";
+        card.dataset.index = index;
+
+        const cover = document.createElement("div");
+        cover.className = "cover";
+
+        if (item.capaOriginal) {
+            const img = document.createElement("img");
+            img.src = item.capaOriginal;
+            img.alt = "Capa - " + item.nome;
+            img.loading = "eager";
+            img.onerror = () => {
+                img.remove();
+                mostrarPlaceholder(cover, item.nome);
+            };
+            cover.appendChild(img);
+        } else {
+            mostrarPlaceholder(cover, item.nome);
+        }
+
+        const info = document.createElement("div");
+        info.className = "playlist-info";
+
+        const quantidade =
+            item.quantidade > 0
+                ? item.quantidade + (item.quantidade === 1 ? " faixa" : " faixas")
+                : item.descricao;
+
+        info.innerHTML =
+            "<strong>" + escapeHtml(item.nome) + "</strong>" +
+            "<span>" + escapeHtml(quantidade) + "</span>";
+
+        card.appendChild(cover);
+        card.appendChild(info);
+
+        card.addEventListener("click", () => selecionarPlaylist(index));
+
+        playlistsContainer.appendChild(card);
+    });
+
+    atualizarCapaSelecionada();
+}
+
+function mostrarPlaceholder(cover, nome) {
+    const placeholder = document.createElement("div");
+    placeholder.className = "cover-placeholder";
+    placeholder.innerHTML =
+        '<div class="mini-vinyl"></div>' +
+        '<strong>' + escapeHtml(nome) + '</strong>';
+    cover.appendChild(placeholder);
+}
+
+function atualizarCapaDoDisco() {
+    if (!recordLabel) return;
+
+    const item = playlists[playlistAtual];
+    const capa = item?.capaOriginal || item?.capa || "";
+
+    if (capa) {
+        recordLabel.style.backgroundImage =
+            'radial-gradient(circle at center,rgba(0,0,0,.02) 0 48%,rgba(0,0,0,.18) 70%,rgba(0,0,0,.42) 100%), url("' +
+            capa.replace(/"/g, '\\\"') + '")';
+        recordLabel.style.backgroundSize = "100% 100%, cover";
+        recordLabel.style.backgroundPosition = "center, center";
+        recordLabel.style.backgroundRepeat = "no-repeat";
+    }
+}
+
+function atualizarCapaSelecionada() {
+    const cards = playlistsContainer.querySelectorAll(".playlist-card");
+    cards.forEach((card, index) => {
+        card.classList.toggle("active", index === playlistAtual);
+    });
+    atualizarCapaDoDisco();
+}
+
+/* =========================================================
+   YOUTUBE IFRAME API
+========================================================= */
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player("youtube-player", {
+        width: "200",
+        height: "200",
+        playerVars: {
+            autoplay: 0,
+            controls: 0,
+            rel: 0,
+            playsinline: 1,
+            listType: "playlist",
+            list: playlists[0].playlist
+        },
+        events: {
+            onReady: onPlayerReady,
+            onStateChange: onPlayerStateChange,
+            onError: onPlayerError
+        }
+    });
+}
+
+function onPlayerReady() {
+    playerReady = true;
+    player.setVolume(Number(volume.value));
+
+    const inicial = playlists[playlistAtual];
+
+    if (inicial.tipo === "video") {
+        player.cueVideoById({
+            videoId: inicial.video,
+            startSeconds: 0
+        });
+    } else {
+        player.cuePlaylist({
+            listType: "playlist",
+            list: inicial.playlist,
+            index: 0
+        });
+    }
+
+    atualizarInformacoes();
+    statusText.textContent = "Pronto";
+}
+
+/* =========================================================
+   SELECIONAR PLAYLIST
+========================================================= */
+function selecionarPlaylist(index) {
+    if (index < 0 || index >= playlists.length) return;
+
+    playlistAtual = index;
+    const item = playlists[playlistAtual];
+
+    atualizarCapaSelecionada();
+    atualizarInformacoes();
+
+    if (!playerReady) {
+        statusText.textContent = "Carregando YouTube...";
+        return;
+    }
+
+    tocando = false;
+    vinyl.classList.remove("playing");
+    tonearm.classList.remove("playing-arm");
+    playButton.textContent = "▶ Reproduzir";
+    statusText.textContent = "Abrindo " + item.nome + "...";
+
+    player.stopVideo();
+
+    if (item.tipo === "video") {
+        player.loadVideoById({
+            videoId: item.video,
+            startSeconds: 0
+        });
+    } else {
+        player.loadPlaylist({
+            listType: "playlist",
+            list: item.playlist,
+            index: 0
+        });
+    }
+
+    player.setVolume(Number(volume.value));
+
+    setTimeout(() => {
+        if (playerReady && playlists[playlistAtual] === item) {
+            player.playVideo();
+        }
+    }, 450);
+}
+
+/* =========================================================
+   INFORMAÇÕES
+========================================================= */
+function atualizarInformacoes() {
+    const item = playlists[playlistAtual];
+    song.textContent = item.nome;
+    playlistName.textContent = item.descricao;
+    atualizarCapaDoDisco();
+}
+
+function atualizarTituloMusica() {
+    if (!playerReady) return;
+
+    try {
+        const dados = player.getVideoData();
+
+        if (dados?.title) {
+            song.textContent = dados.title;
+        }
+
+        const index = player.getPlaylistIndex();
+
+        if (typeof index === "number" && index >= 0) {
+            playlistName.textContent =
+                playlists[playlistAtual].nome +
+                " • faixa " + (index + 1);
+        }
+
+        // A capa da playlist fica fixa.
+        // A troca de música não altera a imagem do álbum.
+    } catch (e) {}
+}
+
+function atualizarCapaDaFaixa() {
+    // Intencionalmente vazio: a capa da playlist/álbum nunca muda
+    // quando a faixa atual muda.
+}
+
+/* =========================================================
+   PLAY / PAUSE
+========================================================= */
+function togglePlay() {
+    if (!playerReady) {
+        statusText.textContent = "YouTube carregando...";
+        return;
+    }
+
+    if (tocando) pauseMusic();
+    else playMusic();
+}
+
+function playMusic() {
+    if (!playerReady) return;
+
+    player.playVideo();
+    iniciarVisual();
+    statusText.textContent = "Tocando...";
+}
+
+function iniciarVisual() {
+    tocando = true;
+    vinyl.classList.add("playing");
+    tonearm.classList.add("playing-arm");
+    playButton.textContent = "⏸ Pausar";
+}
+
+function pararVisual() {
+    tocando = false;
+    vinyl.classList.remove("playing");
+    tonearm.classList.remove("playing-arm");
+    playButton.textContent = "▶ Reproduzir";
+}
+
+function pauseMusic() {
+    if (playerReady) player.pauseVideo();
+
+    tocando = false;
+    vinyl.classList.remove("playing");
+    playButton.textContent = "▶ Reproduzir";
+    statusText.textContent = "Pausado";
+}
+
+function stopMusic() {
+    if (playerReady) player.stopVideo();
+
+    tocando = false;
+    vinyl.classList.remove("playing");
+    tonearm.classList.remove("playing-arm");
+    playButton.textContent = "▶ Reproduzir";
+    statusText.textContent = "Parado";
+    currentTime.textContent = "0:00";
+    duration.textContent = "0:00";
+}
+
+/* =========================================================
+   ANTERIOR / PRÓXIMA
+========================================================= */
+function previousMusic() {
+    if (!playerReady) return;
+
+    if (playlists[playlistAtual].tipo === "video") {
+        selecionarPlaylist((playlistAtual - 1 + playlists.length) % playlists.length);
+        return;
+    }
+
+    player.previousVideo();
+    iniciarVisual();
+    statusText.textContent = "Anterior...";
+}
+
+function nextMusic() {
+    if (!playerReady) return;
+
+    if (playlists[playlistAtual].tipo === "video") {
+        selecionarPlaylist((playlistAtual + 1) % playlists.length);
+        return;
+    }
+
+    player.nextVideo();
+    iniciarVisual();
+    statusText.textContent = "Próxima...";
+}
+
+/* =========================================================
+   VOLUME
+========================================================= */
+volume.addEventListener("input", function() {
+    if (playerReady) player.setVolume(Number(this.value));
+});
+
+/* =========================================================
+   BOTÕES
+========================================================= */
+playButton.addEventListener("click", togglePlay);
+previousButton.addEventListener("click", previousMusic);
+nextButton.addEventListener("click", nextMusic);
+stopButton.addEventListener("click", stopMusic);
+
+/* =========================================================
+   ESTADO DO PLAYER
+========================================================= */
+function onPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.PLAYING) {
+        tocando = true;
+        iniciarVisual();
+        statusText.textContent = "Tocando...";
+        atualizarTituloMusica();
+    }
+
+    else if (event.data === YT.PlayerState.PAUSED) {
+        tocando = false;
+        vinyl.classList.remove("playing");
+        playButton.textContent = "▶ Reproduzir";
+        statusText.textContent = "Pausado";
+    }
+
+    else if (event.data === YT.PlayerState.ENDED) {
+        tocando = false;
+        vinyl.classList.remove("playing");
+        tonearm.classList.remove("playing-arm");
+        playButton.textContent = "▶ Reproduzir";
+        statusText.textContent = "Fim da faixa";
+    }
+
+    else if (event.data === YT.PlayerState.CUED) {
+        atualizarTituloMusica();
+        atualizarCapaDoDisco();
+        statusText.textContent = "Pronto";
+    }
+}
+
+function onPlayerError() {
+    tocando = false;
+    vinyl.classList.remove("playing");
+    tonearm.classList.remove("playing-arm");
+    playButton.textContent = "▶ Reproduzir";
+    statusText.textContent = "Erro no YouTube";
+}
+
+/* =========================================================
+   TEMPO
+========================================================= */
+setInterval(() => {
+    if (!playerReady || !player.getDuration) return;
+
+    try {
+        currentTime.textContent = formatTime(player.getCurrentTime());
+        duration.textContent = formatTime(player.getDuration());
+    } catch (e) {}
+}, 500);
+
+function formatTime(seconds) {
+    if (!isFinite(seconds)) return "0:00";
+
+    const minutes = Math.floor(seconds / 60);
+    let secs = Math.floor(seconds % 60);
+
+    if (secs < 10) secs = "0" + secs;
+
+    return minutes + ":" + secs;
+}
+
+/* =========================================================
+   CARREGAMENTO INICIAL DAS CAPAS
+========================================================= */
+async function prepararPlaylists() {
+    if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY.includes("COLE_SUA")) {
+        apiMessage.hidden = false;
+        apiMessage.innerHTML =
+            "⚠️ Falta colocar a chave da <b>YouTube Data API v3</b>. " +
+            "Sem ela, o player funciona, mas a capa automática da playlist não será carregada.";
+        renderPlaylists();
+        return;
+    }
+
+    apiMessage.hidden = false;
+    apiMessage.textContent = "Buscando capas das playlists no YouTube...";
+
+    let algumaFuncionou = false;
+
+    for (const item of playlists) {
+        const ok = await carregarDadosPlaylist(item);
+        if (ok) algumaFuncionou = true;
+    }
+
+    renderPlaylists();
+    atualizarCapaDoDisco();
+
+    if (algumaFuncionou) {
+        apiMessage.hidden = true;
+        song.textContent = playlists[0].nome;
+        playlistName.textContent = playlists[0].descricao;
+    } else {
+        apiMessage.hidden = false;
+        apiMessage.textContent =
+            "Não consegui carregar a capa. Verifique a chave da API, as restrições da chave e se a playlist é pública.";
+    }
+}
+
+/* Começa o carregamento visual imediatamente */
+renderPlaylists();
+atualizarCapaDoDisco();
+prepararPlaylists();
+
+
+/* =========================================================
+   PWA — INSTALAÇÃO / ANDROID / SAFARI / INSTAGRAM / FACEBOOK
+========================================================= */
+let deferredPrompt = null;
+
+const pwaPopup = document.getElementById("pwaPopup");
+const pwaTitulo = document.getElementById("pwaTitulo");
+const pwaTexto = document.getElementById("pwaTexto");
+const pwaSteps = document.getElementById("pwaSteps");
+const pwaBtn = document.getElementById("pwaBtn");
+const pwaClose = document.getElementById("pwaClose");
+const pwaInstallLink = document.getElementById("pwaInstallLink");
+
+const browserUA = navigator.userAgent.toLowerCase();
+
+function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function isAndroid() {
+    return /android/i.test(navigator.userAgent);
+}
+
+function isInAppBrowser() {
+    return /instagram|fbav|fban|facebook|messenger|line\/|twitter|snapchat/i.test(browserUA);
+}
+
+function isStandalone() {
+    return window.matchMedia("(display-mode: standalone)").matches ||
+           window.matchMedia("(display-mode: fullscreen)").matches ||
+           window.navigator.standalone === true;
+}
+
+function isSafari() {
+    return /safari/i.test(browserUA) &&
+           !/chrome|crios|android|edg|opr|firefox|fxios/i.test(browserUA);
+}
+
+function fecharPWA() {
+    if (pwaPopup) pwaPopup.style.display = "none";
+}
+
+function abrirPWA() {
+    if (!pwaPopup || isStandalone()) return;
+
+    pwaPopup.style.display = "flex";
+
+    if (isInAppBrowser()) {
+        pwaTitulo.textContent = "ABRIR NO NAVEGADOR";
+        pwaTexto.textContent = "O Instagram/Facebook está usando um navegador interno.";
+        pwaSteps.innerHTML = `
+            1. Toque no menu <b>⋮</b> ou <b>...</b>.<br>
+            2. Escolha <b>Abrir no navegador</b>.<br>
+            3. No Chrome/Safari, abra novamente este endereço.<br>
+            4. Depois instale o aplicativo.
+        `;
+        pwaBtn.textContent = "COPIAR LINK";
+        pwaBtn.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(location.href);
+                pwaTexto.textContent = "Link copiado. Agora abra o navegador do celular e cole o endereço.";
+            } catch (e) {
+                pwaTexto.textContent = location.href;
+            }
+        };
+        return;
+    }
+
+    if (isIOS()) {
+        pwaTitulo.textContent = "INSTALAR NO IPHONE / IPAD";
+        pwaTexto.textContent = "No Safari, a instalação é feita pelo menu Compartilhar.";
+        pwaSteps.innerHTML = `
+            1. Abra este site no <b>Safari</b>.<br>
+            2. Toque em <b>Compartilhar ⤴</b>.<br>
+            3. Toque em <b>Adicionar à Tela de Início</b>.<br>
+            4. Toque em <b>Adicionar</b>.
+        `;
+        pwaBtn.textContent = "ENTENDI";
+        pwaBtn.onclick = fecharPWA;
+        return;
+    }
+
+    if (deferredPrompt) {
+        pwaTitulo.textContent = "INSTALAR APLICATIVO";
+        pwaTexto.textContent = isAndroid()
+            ? "O Chrome pode instalar este site como aplicativo."
+            : "Este navegador disponibilizou a instalação do aplicativo.";
+        pwaSteps.innerHTML = `
+            ✔ Ícone na tela inicial<br>
+            ✔ Abre como aplicativo<br>
+            ✔ Atalho rápido para o toca-discos
+        `;
+        pwaBtn.textContent = "INSTALAR AGORA";
+        pwaBtn.onclick = async () => {
+            try {
+                await deferredPrompt.prompt();
+                await deferredPrompt.userChoice;
+            } catch (e) {}
+            deferredPrompt = null;
+            fecharPWA();
+            atualizarBotaoInstalar();
+        };
+        return;
+    }
+
+    pwaTitulo.textContent = "INSTALAR NO DISPOSITIVO";
+    pwaTexto.textContent = "O navegador não liberou o botão automático. Use o menu do navegador.";
+    pwaSteps.innerHTML = isSafari()
+        ? `
+            No Safari, procure a opção de <b>Adicionar à Tela de Início</b>
+            (iPhone/iPad) ou <b>Adicionar ao Dock</b> (macOS), quando disponível.
+        `
+        : `
+            <b>Chrome / Edge:</b> abra o menu <b>⋮</b> e procure
+            <b>Instalar aplicativo</b> ou <b>Adicionar à tela inicial</b>.<br><br>
+            <b>Outros navegadores:</b> abra o menu e procure
+            <b>Instalar</b>, <b>Adicionar à tela inicial</b> ou opção equivalente.
+        `;
+    pwaBtn.textContent = "ENTENDI";
+    pwaBtn.onclick = fecharPWA;
+}
+
+function atualizarBotaoInstalar() {
+    if (!pwaInstallLink) return;
+
+    if (isStandalone() || isInAppBrowser()) {
+        pwaInstallLink.style.display = "none";
+    } else {
+        pwaInstallLink.style.display = "block";
+    }
+}
+
+window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    atualizarBotaoInstalar();
+});
+
+window.addEventListener("appinstalled", () => {
+    deferredPrompt = null;
+    fecharPWA();
+    atualizarBotaoInstalar();
+});
+
+if (pwaInstallLink) {
+    pwaInstallLink.addEventListener("click", abrirPWA);
+}
+
+if (pwaClose) {
+    pwaClose.addEventListener("click", fecharPWA);
+}
+
+setTimeout(() => {
+    atualizarBotaoInstalar();
+    if (!isStandalone()) abrirPWA();
+}, 2000);
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js", {scope:"./"})
+            .catch(err => console.error("Falha ao registrar PWA:", err));
+    });
+}
+
+</script>
+</body>
+</html>

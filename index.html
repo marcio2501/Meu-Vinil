@@ -137,6 +137,19 @@ button:active{transform:translateY(2px)}
     letter-spacing:.2px;
 }
 .skip-ad-button:hover{background:linear-gradient(#665225,#352912)}
+.skip-ad-button.ad-active{
+    background:linear-gradient(#d62929,#8f1010);
+    border-color:#ff5555;
+    color:#fff;
+    box-shadow:0 0 0 2px rgba(255,50,50,.15),0 4px 12px rgba(120,0,0,.55);
+}
+.skip-ad-button.ad-finished{
+    background:linear-gradient(#2f9e44,#17652a);
+    border-color:#62d878;
+    color:#fff;
+}
+.skip-ad-button.ad-active:hover{background:linear-gradient(#ee3838,#a51616)}
+.skip-ad-button.ad-finished:hover{background:linear-gradient(#3db955,#1e7a34)}
 .skip-ad-button:active{transform:translateY(2px)}
 .volume-area{width:100%;min-width:0;margin-top:24px}
 .volume-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;color:#bbb;font-size:13px}
@@ -637,6 +650,103 @@ let playerReady = false;
 let tocando = false;
 let playlistAtual = 0;
 
+let anuncioAtivo = false;
+let anuncioFinalizado = false;
+let anuncioTimer = null;
+let anuncioInicio = 0;
+let anuncioDuracao = 0;
+
+/*
+ * PROPAGANDAS CONTROLADAS PELO SEU CÓDIGO.
+ * Coloque aqui o ID do vídeo e a duração em segundos.
+ *
+ * Exemplo:
+ * const ANUNCIOS = {
+ *     "ABC12345678": 30,
+ *     "XYZ98765432": 45
+ * };
+ *
+ * IMPORTANTE:
+ * anúncios comerciais internos do YouTube não são expostos pela
+ * IFrame API como um evento público de início/fim para o HTML.
+ */
+const ANUNCIOS = {
+};
+
+function ehAnuncio(videoId) {
+    return Boolean(videoId && Object.prototype.hasOwnProperty.call(ANUNCIOS, videoId));
+}
+
+function resetarBotaoAnuncio() {
+    clearInterval(anuncioTimer);
+    anuncioAtivo = false;
+    anuncioFinalizado = false;
+    anuncioInicio = 0;
+    anuncioDuracao = 0;
+
+    skipAdButton.classList.remove("ad-active", "ad-finished");
+    skipAdButton.disabled = false;
+    skipAdButton.textContent = "⏭ Pular propaganda";
+    skipAdButton.title = "Avançar para a próxima faixa";
+}
+
+function iniciarAnuncio(videoId) {
+    clearInterval(anuncioTimer);
+
+    anuncioAtivo = true;
+    anuncioFinalizado = false;
+    anuncioInicio = Date.now();
+
+    const duracao = Number(ANUNCIOS[videoId]);
+    anuncioDuracao = Number.isFinite(duracao) && duracao > 0 ? duracao : 0;
+
+    skipAdButton.classList.remove("ad-finished");
+    skipAdButton.classList.add("ad-active");
+    skipAdButton.disabled = true;
+    skipAdButton.textContent = "🔴 ANÚNCIO";
+    skipAdButton.title = "A propaganda está sendo reproduzida";
+    statusText.textContent = "Anúncio...";
+
+    if (anuncioDuracao > 0) {
+        anuncioTimer = setInterval(() => {
+            if ((Date.now() - anuncioInicio) / 1000 >= anuncioDuracao) {
+                finalizarAnuncio();
+            }
+        }, 250);
+    }
+}
+
+function finalizarAnuncio() {
+    clearInterval(anuncioTimer);
+
+    anuncioAtivo = false;
+    anuncioFinalizado = true;
+
+    skipAdButton.disabled = false;
+    skipAdButton.classList.remove("ad-active");
+    skipAdButton.classList.add("ad-finished");
+    skipAdButton.textContent = "⏭ PULAR";
+    skipAdButton.title = "A propaganda terminou. Clique para avançar.";
+    statusText.textContent = "Anúncio terminado";
+}
+
+function verificarAnuncioAtual() {
+    if (!playerReady) return;
+
+    try {
+        const dados = player.getVideoData();
+        const videoId = dados?.video_id || "";
+
+        if (ehAnuncio(videoId)) {
+            if (!anuncioAtivo && !anuncioFinalizado) {
+                iniciarAnuncio(videoId);
+            }
+        } else if (anuncioAtivo || anuncioFinalizado) {
+            resetarBotaoAnuncio();
+        }
+    } catch (e) {}
+}
+
 /* =========================================================
    SEGURANÇA
 ========================================================= */
@@ -943,6 +1053,7 @@ function selecionarPlaylist(index) {
     if (index < 0 || index >= playlists.length) return;
 
     playlistAtual = index;
+    resetarBotaoAnuncio();
     const item = playlists[playlistAtual];
 
     atualizarCapaSelecionada();
@@ -1127,13 +1238,14 @@ skipAdButton.addEventListener("click", () => {
         return;
     }
 
+    if (anuncioAtivo) {
+        statusText.textContent = "Aguarde o fim da propaganda...";
+        return;
+    }
+
     try {
-        /*
-         * IMPORTANTE:
-         * A YouTube IFrame API não fornece um comando para clicar
-         * programaticamente no botão "Pular anúncio" do próprio YouTube.
-         * Portanto, este botão avança para a próxima faixa/vídeo.
-         */
+        if (anuncioFinalizado) resetarBotaoAnuncio();
+
         if (playlists[playlistAtual].tipo === "video") {
             selecionarPlaylist((playlistAtual + 1) % playlists.length);
             return;
@@ -1155,8 +1267,8 @@ function onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.PLAYING) {
         tocando = true;
         iniciarVisual();
-        statusText.textContent = "Tocando...";
         atualizarTituloMusica();
+        setTimeout(verificarAnuncioAtual, 100);
     }
 
     else if (event.data === YT.PlayerState.PAUSED) {
@@ -1171,7 +1283,12 @@ function onPlayerStateChange(event) {
         vinyl.classList.remove("playing");
         tonearm.classList.remove("playing-arm");
         playButton.textContent = "▶ Reproduzir";
-        statusText.textContent = "Fim da faixa";
+
+        if (anuncioAtivo) {
+            finalizarAnuncio();
+        } else {
+            statusText.textContent = "Fim da faixa";
+        }
     }
 
     else if (event.data === YT.PlayerState.CUED) {
@@ -1198,6 +1315,7 @@ setInterval(() => {
     try {
         currentTime.textContent = formatTime(player.getCurrentTime());
         duration.textContent = formatTime(player.getDuration());
+        verificarAnuncioAtual();
     } catch (e) {}
 }, 500);
 
